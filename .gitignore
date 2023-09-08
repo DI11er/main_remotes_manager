@@ -1,0 +1,5 @@
+docker/postgresql/data
+docker/postgresql/initdb.sql
+docker/guacd/record
+docker/guacd/drive
+docker-compose.yaml

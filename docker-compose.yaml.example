@@ -1,0 +1,50 @@
+version: '3.3'
+
+
+services:
+  # DB  
+  postgresql:
+    build:
+      context: ./docker/postgresql
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./docker/postgresql/initdb.sql:/docker-entrypoint-initdb.d/initdb.sql:ro
+      - ./docker/postgresql/data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=guacamole_db
+      - POSTGRES_USER=guacamole_user
+      - POSTGRES_PASSWORD=guacamole_password
+      - TZ=Europe/Moscow
+  
+  # Deamon      
+  guacd:
+    build:
+      context: ./docker/guacd
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./docker/guacd/drive:/drive:rw
+      - ./docker/guacd/record:/record:rw
+    depends_on:
+      - postgresql
+
+  # WebUI    
+  guacamole:
+    build:
+      context: ./docker/guacamole
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 8087:8080
+    environment:
+      - GUACD_HOSTNAME=guacd
+      - GUACD_PORT=4822
+      - POSTGRESQL_HOSTNAME=postgresql
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_DATABASE=guacamole_db
+      - POSTGRESQL_USER=guacamole_user
+      - POSTGRESQL_PASSWORD=guacamole_password
+    depends_on:
+      - guacd
+      - postgresql
